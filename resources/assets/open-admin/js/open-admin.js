@@ -169,7 +169,7 @@ admin.menu = {
             let li = a.parentNode;
             li.classList.remove('active');
             a.blur();
-            if (a.attributes['href'].value === url) {
+            if (a?.attributes['href'].value === url) {
                 let parent = li.parentNode;
 
                 if (!parent.classList.contains('show')) {
