@@ -101,6 +101,7 @@ trait UploadField
         'excel'      => 'icon-file-excel',
         'powerpoint' => 'icon-file-powerpoint',
         'text'       => 'icon-file-alt',
+        'other'      => 'icon-file-alt',
         'video'      => 'icon-file-video',
         'audio'      => 'icon-file-audio',
         'pdf'        => 'icon-file-pdf',
