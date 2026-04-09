@@ -23,7 +23,7 @@ document.querySelectorAll('#{$this->grid->tableID} .grid-column-copyable').forEa
         tmp_input.setAttribute('type', 'text');
         tmp_input.setAttribute('value', content);
         document.body.appendChild(tmp_input);
-        tmp_input.focus();
+        //tmp_input.focus(); // Scrolls down on page
         tmp_input.select();
         document.execCommand("copy");
         tmp_input.remove();
