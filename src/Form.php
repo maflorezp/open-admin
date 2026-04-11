@@ -855,6 +855,9 @@ class Form implements Renderable
                 || (in_array($columns, $this->relation_fields) && !$isRelationUpdate)) {
                 continue;
             }
+            if (in_array($field->column(), $this->ignored, true)) {
+                continue;
+            }
 
             $value = $this->getDataByColumn($updates, $columns);
             $value = $field->prepare($value);
