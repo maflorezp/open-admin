@@ -159,6 +159,12 @@ class EmbeddedForm
      */
     public function prepare($input)
     {
+        // A partial/inline update may not submit this embeds field at all,
+        // in which case `false` is passed in. Nothing to prepare then.
+        if (!is_array($input)) {
+            return $input;
+        }
+
         foreach ($input as $key => $record) {
             $this->setFieldOriginalValue($key);
             $input[$key] = $this->prepareValue($key, $record);

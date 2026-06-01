@@ -109,6 +109,15 @@ class Form implements Renderable
     protected $ignored = [];
 
     /**
+     * Whether the current update only submits a subset of columns
+     * (inline grid / editable update). When true, fields that were not
+     * submitted are left untouched instead of being cleared.
+     *
+     * @var bool
+     */
+    protected $isPartialUpdate = false;
+
+    /**
      * Collected field assets.
      *
      * @var array
@@ -545,6 +554,10 @@ class Form implements Renderable
 
         $isEditable = $this->isEditable($data);
 
+        // Inline/editable updates only submit the edited column(s); restrict the
+        // update to those so other fields are not cleared (e.g. multiselects).
+        $this->isPartialUpdate = $isEditable;
+
         if (($data = $this->handleColumnUpdates($id, $data)) instanceof Response) {
             return $data;
         }
@@ -859,6 +872,12 @@ class Form implements Renderable
                 continue;
             }
 
+            // On a partial (inline/editable) update only touch columns that were
+            // actually submitted; leave every other field untouched.
+            if ($this->isPartialUpdate && !$isRelationUpdate && !$this->hasSubmittedColumn($updates, $columns)) {
+                continue;
+            }
+
             $value = $this->getDataByColumn($updates, $columns);
             $value = $field->prepare($value);
 
@@ -988,6 +1007,27 @@ class Form implements Renderable
         }
         // if not found return false
         // false values won't be save
+        return false;
+    }
+
+    /**
+     * Determine whether any of a field's column(s) were submitted in the input.
+     *
+     * Used to skip non-submitted fields during a partial (inline/editable) update.
+     *
+     * @param array        $data
+     * @param string|array $columns
+     *
+     * @return bool
+     */
+    protected function hasSubmittedColumn($data, $columns): bool
+    {
+        foreach ((array) $columns as $column) {
+            if (Arr::has($data, $column)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
