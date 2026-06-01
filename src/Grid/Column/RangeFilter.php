@@ -101,6 +101,7 @@ SCRIPT;
         return <<<EOT
 <span class="dropdown">
 <form action="{$this->getFormAction()}" pjax-container method="get" style="display: inline-block;">
+    {$this->getPreservedHiddenInputs()}
     <a href="javascript:void(0);" class="dropdown-toggle {$active}" data-bs-toggle="dropdown">
         <i class="icon-filter"></i>
     </a>

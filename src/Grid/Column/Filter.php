@@ -69,6 +69,32 @@ class Filter implements Renderable
     }
 
     /**
+     * Build hidden inputs for every other active query parameter.
+     *
+     * A `method="get"` form submission discards the action URL's query string
+     * and only sends the form's own fields, so without these hidden inputs any
+     * other active column filter (or sort/search) would be dropped — only one
+     * filter could be used at a time.
+     *
+     * @return string
+     */
+    protected function getPreservedHiddenInputs()
+    {
+        $query = request()->query();
+        Arr::forget($query, [$this->getColumnName(), '_pjax']);
+
+        return collect(Arr::dot($query))->map(function ($value, $key) {
+            $segments = explode('.', $key);
+            $name = array_shift($segments);
+            foreach ($segments as $segment) {
+                $name .= '['.$segment.']';
+            }
+
+            return sprintf('<input type="hidden" name="%s" value="%s"/>', e($name), e($value));
+        })->implode("\n");
+    }
+
+    /**
      * @param string $key
      *
      * @return array|null|string
