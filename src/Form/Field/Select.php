@@ -123,12 +123,15 @@ class Select extends Field
 
             var lookupTimeout;
             document.querySelector("{$this->getElementClassSelector()}").addEventListener('change', function(event) {
-                var query = {$this->choicesObjName()}.getValue().value;
-                var current_value = {$field_var_name}.getValue().value;
+                // getValue() da un arreglo en selects múltiples y undefined si el select está vacío
+                var selected = {$this->choicesObjName()}.getValue();
+                var query = Array.isArray(selected) ? selected.map(function (item) { return item.value; }).join(',') : (selected ? selected.value : '');
+                var current = {$field_var_name}.getValue();
+                var current_value = current && !Array.isArray(current) ? current.value : undefined;
                 admin.ajax.post("{$url}",{query:query},function(data){
                     let found = false;
-                    for (i in data.data){
-                        if (data.data[i].id == current_value){
+                    for (let i in data.data){
+                        if (data.data[i]['{$idField}'] == current_value){
                             data.data[i].selected = true;
                             found = true;
                         }
