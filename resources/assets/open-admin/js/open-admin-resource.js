@@ -55,7 +55,8 @@
         },
 
         default_swal_response : function(result) {
-            let data = result.value;
+            // admin.ajax.post entrega la respuesta de axios: el JSON viene en .data
+            let data = result.value?.data;
             if (typeof data === 'object') {
                 if (data.status) {
                     Swal.fire(data.message, '', 'success');

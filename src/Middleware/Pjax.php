@@ -68,6 +68,14 @@ class Pjax
     {
         $exception = $response->exception;
 
+        // Una respuesta de error sin excepción (abort con vista, response()->json(..., 4xx)) no trae clase que reportar
+        if (empty($exception)) {
+            return back()->withInput()->withErrors(new MessageBag([
+                'type'    => 'HTTP '.$response->getStatusCode(),
+                'message' => Response::$statusTexts[$response->getStatusCode()] ?? '',
+            ]), 'exception');
+        }
+
         $error = new MessageBag([
             'type'    => get_class($exception),
             'message' => $exception->getMessage(),
