@@ -48,6 +48,8 @@ admin.actions = {
                     var url = action.url;
                     admin.ajax[action.method](url, data, function(data){
                         admin.actions.actionResolver([data,el]);
+                    }, function(error){
+                        admin.actions.actionCatcher(error);
                     });
                 }).catch(function(){
                     console.log("canceled")
@@ -108,9 +110,32 @@ admin.actions = {
         }
     },
 
-    actionCatcher : function (request) {
-        if (request && typeof request.responseJSON === 'object') {
-            admin.toastr.error(request.responseJSON.message, {positionClass:"toast-bottom-center", timeOut: 10000}).css("width","500px")
+    // Muestra por qué falló una acción. Antes nunca se llamaba y estaba escrito para el toastr de
+    // jQuery que el panel ya no usa: un 500, un token vencido o una caída de red pasaban en silencio
+    actionCatcher : function (error) {
+        var response = error ? error.response : null;
+        var data = response ? response.data : null;
+        var message = null;
+
+        if (data) {
+            if (typeof data === 'string') {
+                message = data;
+            } else if (data.toastr && data.toastr.content) {
+                message = data.toastr.content;
+            } else if (data.message) {
+                message = data.message;
+            } else if (data.errors) {
+                message = Object.keys(data.errors).map(function (key) {
+                    return [].concat(data.errors[key]).join('\n');
+                }).join('\n');
+            }
         }
+
+        if (!message) {
+            message = response ? 'Request failed (' + response.status + ')' : 'Request failed';
+        }
+
+        admin.toastr.error(message, {duration: 10000});
+        console.log(error);
     }
 }

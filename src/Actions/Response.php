@@ -219,11 +219,11 @@ class Response
     }
 
     /**
-     * @param \Exception $exception
+     * @param \Throwable $exception
      *
      * @return mixed
      */
-    public static function withException(\Exception $exception)
+    public static function withException(\Throwable $exception)
     {
         $response = new static();
 

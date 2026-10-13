@@ -13,6 +13,7 @@ use OpenAdmin\Admin\Actions\GridAction;
 use OpenAdmin\Admin\Actions\Response;
 use OpenAdmin\Admin\Actions\RowAction;
 use OpenAdmin\Admin\Widgets\Form;
+use Throwable;
 
 class HandleController extends Controller
 {
@@ -90,7 +91,9 @@ class HandleController extends Controller
             $response = $action->validate($request)->handle(
                 ...$this->resolveActionArgs($request, ...$arguments)
             );
-        } catch (Exception $exception) {
+        } catch (Throwable $exception) {
+            // Throwable y no Exception: un TypeError u otro Error escapaba y dejaba un 500 mudo,
+            // que en la grilla parece que la acción no hizo nada
             return Response::withException($exception)->send();
         }
 

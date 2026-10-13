@@ -267,7 +267,8 @@ admin.ajax = {
         this.request(url, obj);
     },
 
-    request: function (url, obj, result_function) {
+    // error_function es opcional: sin ella, una petición fallida solo llega a la consola
+    request: function (url, obj, result_function, error_function) {
         if (typeof obj == 'undefined') {
             obj = {};
         }
@@ -286,7 +287,11 @@ admin.ajax = {
                 }
             })
             .catch(function (error) {
-                admin.ajax.error(error);
+                if (typeof error_function === 'function') {
+                    error_function(error);
+                } else {
+                    admin.ajax.error(error);
+                }
             })
             .then(function () {
                 NProgress.done();
@@ -314,24 +319,24 @@ admin.ajax = {
             const formData = new FormData();
             formData.append('name', value);
          */
-    post: function (url, data, result_function) {
+    post: function (url, data, result_function, error_function) {
         let obj = {
             method: 'post',
             data: data,
             url: url,
         };
         obj.data._token = LA.token;
-        this.request(url, obj, result_function);
+        this.request(url, obj, result_function, error_function);
     },
 
-    get: function (url, data, result_function) {
+    get: function (url, data, result_function, error_function) {
         let obj = {
             method: 'get',
             data: data,
             url: url,
         };
         obj.data._token = LA.token;
-        this.request(url, obj, result_function);
+        this.request(url, obj, result_function, error_function);
     },
 
     done: function (response) {

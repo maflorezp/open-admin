@@ -2,6 +2,7 @@
 
 namespace OpenAdmin\Admin\Actions\Interactor;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\View;
@@ -145,12 +146,32 @@ class Form extends Interactor
         // return an actual form instance instead of the interactor
         if (empty($this->form)) {
 
-            $this->form = new ModalForm(
-                method_exists($this->action, 'row') ? $this->action->row() : $this
-            );
+            $this->form = new ModalForm($this->formModel());
         }
 
         return $this->form;
+    }
+
+    /**
+     * Modelo sobre el que se arma el formulario del modal.
+     *
+     * Form::model() exige un modelo Eloquent y cada campo lo pide al armar sus reglas: entregarle
+     * el interactor tumbaba con TypeError cualquier acción con campos antes de llegar a handle().
+     * Las acciones de fila usan su fila; las de lote y herramienta, un modelo vacío sin llave,
+     * que deja las reglas tal como se escribieron.
+     *
+     * @return Model
+     */
+    protected function formModel(): Model
+    {
+        $row = method_exists($this->action, 'row') ? $this->action->row() : null;
+
+        if ($row instanceof Model) {
+            return $row;
+        }
+
+        return new class() extends Model {
+        };
     }
 
     /**
