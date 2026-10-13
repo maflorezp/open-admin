@@ -105,12 +105,15 @@ admin.menu = {
                 return;
             }
 
-            let regex = new RegExp(text, 'i');
+            // Cada palabra se busca por separado y todas deben aparecer: «a con» encuentra «ali configuración».
+            // Se compara como texto y no como RegExp: un «(» o «[» escrito por el usuario lanzaba excepción
+            let words = text.trim().toLowerCase().split(/\s+/).filter((word) => word.length > 0);
             let matched = false;
 
             search_menu.querySelectorAll('li').forEach((li) => {
                 let a = li.querySelector('a');
-                if (!regex.test(a.textContent)) {
+                let content = a.textContent.toLowerCase();
+                if (!words.every((word) => content.includes(word))) {
                     hide(li);
                     li.classList.remove('shown');
                     a.classList.remove('selected');
