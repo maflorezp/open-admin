@@ -171,6 +171,16 @@ class HandleController extends Controller
     }
 
     /**
+     * Entrega el token CSRF vigente de la sesión, para refrescarlo en una página abierta hace rato.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refreshCsrfToken()
+    {
+        return response()->json(['token' => csrf_token()]);
+    }
+
+    /**
      * @param Request $request
      *
      * @return mixed|string|string[]

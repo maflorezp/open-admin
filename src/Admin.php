@@ -340,6 +340,20 @@ class Admin
             $router->get('auth/setting', $authController.'@getSetting')->name('admin.setting');
             $router->put('auth/setting', $authController.'@putSetting');
         });
+
+        // El refresco del token solo exige sesión iniciada: sin admin.permission (un rol limitado
+        // no podría refrescar) ni admin.log (llenaría el registro de operaciones cada pocos minutos)
+        $csrfMiddleware = array_values(array_diff((array) config('admin.route.middleware'), ['admin']));
+        $csrfMiddleware[] = 'admin.auth';
+
+        app('router')->group([
+            'prefix'     => config('admin.route.prefix'),
+            'middleware' => $csrfMiddleware,
+        ], function ($router) {
+            // Acción de controlador y no closure, para que route:cache siga funcionando
+            $router->get('_refresh_csrf_', '\\OpenAdmin\\Admin\\Controllers\\HandleController@refreshCsrfToken')
+                ->name('admin.refresh-csrf');
+        });
     }
 
     /**

@@ -385,6 +385,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Refresco automático del token CSRF
+    |--------------------------------------------------------------------------
+    |
+    | Cada cuántos minutos pide el panel un token CSRF fresco y lo reparte en
+    | LA.token, la meta csrf-token y todos los inputs _token de la página, para
+    | no recibir un 419 al guardar tras una sesión larga. Cada petición mantiene
+    | viva la sesión mientras la pestaña siga abierta, así que el cierre de
+    | sesión por inactividad deja de ocurrir. 0 lo desactiva (por defecto).
+    |
+    */
+    'csrf_refresh' => env('ADMIN_CSRF_REFRESH', 0),
+
+    /*
+    |--------------------------------------------------------------------------
     | The global Grid action display class. (Actions::class, DropdownActions:class or ContextMenuActions::class)
     |--------------------------------------------------------------------------
     */
