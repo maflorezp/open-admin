@@ -28,6 +28,21 @@ abstract class RowAction extends GridAction
     protected $asColumn = false;
 
     /**
+     * Tooltip (atributo title) del enlace. null = sin tooltip (por defecto);
+     * true = usa name(); un string = ese texto.
+     *
+     * @var string|bool|null
+     */
+    public $title = null;
+
+    /**
+     * Destino del enlace cuando la acción es un href. null = misma ventana (por defecto).
+     *
+     * @var string|null
+     */
+    public $target = null;
+
+    /**
      * Get primary key value of current row.
      *
      * @return mixed
@@ -123,6 +138,68 @@ abstract class RowAction extends GridAction
         return $modelClass::findOrFail($key);
     }
 
+    /**
+     * Activa el tooltip del enlace: sin argumento usa name(), o el texto que se pase.
+     *
+     * @param string|bool|null $title
+     *
+     * @return $this
+     */
+    public function title($title = true)
+    {
+        $this->title = $title;
+
+        return $this;
+    }
+
+    /**
+     * Abre la acción (si es un href) en otra pestaña. Es opt-in: ninguna acción lo
+     * hace por cómo se dibuje (botón o dropdown).
+     *
+     * @param string|null $target
+     *
+     * @return $this
+     */
+    public function target($target = '_blank')
+    {
+        $this->target = $target;
+
+        return $this;
+    }
+
+    /**
+     * Atributo title ya escapado, o cadena vacía si no hay tooltip.
+     *
+     * @return string
+     */
+    protected function formatTitle()
+    {
+        if ($this->title === null || $this->title === false || $this->title === '') {
+            return '';
+        }
+
+        $title = $this->title === true ? $this->name() : $this->title;
+
+        return " title='".e(strip_tags((string) $title))."'";
+    }
+
+    /**
+     * Atributos target/rel ya escapados, o cadena vacía si no hay destino.
+     *
+     * @return string
+     */
+    protected function formatTarget()
+    {
+        if (empty($this->target)) {
+            return '';
+        }
+
+        // noopener evita que la pestaña nueva controle a la del panel mediante window.opener
+        $rel = $this->target === '_blank' ? " rel='noopener'" : '';
+
+        return " target='".e($this->target)."'".$rel;
+    }
+
     public function display($value)
     {
     }
@@ -137,8 +214,12 @@ abstract class RowAction extends GridAction
         $linkClass = ($this->parent->getActionClass() != "OpenAdmin\Admin\Grid\Displayers\Actions\Actions") ? 'dropdown-item' : '';
         $icon = $this->getIcon();
 
+        $title = $this->formatTitle();
+
         if ($href = $this->href()) {
-            return "<a href='{$href}' class='{$linkClass}'>{$icon}<span class='label'>{$this->name()}</span></a>";
+            $target = $this->formatTarget();
+
+            return "<a href='{$href}' class='{$linkClass}'{$title}{$target}>{$icon}<span class='label'>{$this->name()}</span></a>";
         }
 
         $this->addScript();
@@ -146,7 +227,7 @@ abstract class RowAction extends GridAction
         $attributes = $this->formatAttributes();
 
         return sprintf(
-            "<a data-_key='%s' href='javascript:void(0);' class='%s {$linkClass}' {$attributes}>{$icon}<span class='label'>%s</span></a>",
+            "<a data-_key='%s' href='javascript:void(0);' class='%s {$linkClass}' {$attributes}{$title}>{$icon}<span class='label'>%s</span></a>",
             $this->getKey(),
             $this->getElementClass(),
             $this->asColumn ? $this->display($this->row($this->column->getName())) : $this->name()
