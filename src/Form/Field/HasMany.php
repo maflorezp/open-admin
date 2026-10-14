@@ -126,7 +126,8 @@ class HasMany extends Field
 
         /** unset item that contains remove flag */
         foreach ($input[$this->column] as $key => $value) {
-            if ($value[NestedForm::REMOVE_FLAG_NAME]) {
+            // Una fila puede llegar sin la bandera (formularios armados a mano o por API)
+            if (Arr::get($value, NestedForm::REMOVE_FLAG_NAME)) {
                 unset($input[$this->column][$key]);
             }
         }

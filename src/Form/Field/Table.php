@@ -58,7 +58,7 @@ class Table extends HasMany
 
         if ($values = old($this->column)) {
             foreach ($values as $key => $data) {
-                if ($data[NestedForm::REMOVE_FLAG_NAME] == 1) {
+                if (Arr::get($data, NestedForm::REMOVE_FLAG_NAME) == 1) {
                     continue;
                 }
                 $data = empty($data) ? [] : $data;

@@ -291,7 +291,8 @@ class NestedForm
      */
     protected function prepareRecord($record)
     {
-        if ($record[static::REMOVE_FLAG_NAME] == 1) {
+        // Una fila puede llegar sin la bandera (formularios armados a mano o por API)
+        if (Arr::get($record, static::REMOVE_FLAG_NAME) == 1) {
             return $record;
         }
 
@@ -322,7 +323,7 @@ class NestedForm
             }
         }
 
-        $prepared[static::REMOVE_FLAG_NAME] = $record[static::REMOVE_FLAG_NAME];
+        $prepared[static::REMOVE_FLAG_NAME] = Arr::get($record, static::REMOVE_FLAG_NAME, 0);
 
         return $prepared;
     }
