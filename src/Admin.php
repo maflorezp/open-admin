@@ -26,7 +26,7 @@ class Admin
      *
      * @var string
      */
-    public const VERSION = '1.0.28';
+    public const VERSION = '1.0.29';
 
     /**
      * Cabecera con la que una respuesta a una petición PJAX le pide al navegador una recarga completa.
