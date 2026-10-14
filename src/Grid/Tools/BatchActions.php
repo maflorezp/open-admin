@@ -2,6 +2,7 @@
 
 namespace OpenAdmin\Admin\Grid\Tools;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use OpenAdmin\Admin\Actions\BatchAction;
 use OpenAdmin\Admin\Admin;
@@ -22,6 +23,13 @@ class BatchActions extends AbstractTool
      * @var bool
      */
     protected $enableDelete = true;
+
+    /**
+     * Restaurar en lote (SoftDeletes). Opt-in: por defecto apagado.
+     *
+     * @var bool
+     */
+    protected $enableRestore = false;
 
     /**
      * @var bool
@@ -71,6 +79,33 @@ class BatchActions extends AbstractTool
         $this->enableDelete = !$disable;
 
         return $this;
+    }
+
+    /**
+     * Agrega la acción en lote Restaurar. Solo se dibuja si el modelo de la grilla usa SoftDeletes.
+     *
+     * @param bool $enable
+     *
+     * @return $this
+     */
+    public function enableRestore(bool $enable = true)
+    {
+        $this->enableRestore = $enable;
+
+        return $this;
+    }
+
+    /**
+     * Indica si el modelo de la grilla usa SoftDeletes.
+     *
+     * @return bool
+     */
+    protected function gridUsesSoftDeletes()
+    {
+        // eloquent() ya devuelve el paginador cuando la grilla se está dibujando: se usa el modelo original
+        $model = $this->grid->model()->getOriginalModel();
+
+        return $model && in_array(SoftDeletes::class, class_uses_deep($model));
     }
 
     /**
@@ -147,6 +182,10 @@ class BatchActions extends AbstractTool
             $this->actions = $this->actions->filter(function ($action, $key) {
                 return get_class($action) != "OpenAdmin\Admin\Grid\Tools\BatchDelete";
             });
+        }
+
+        if ($this->enableRestore && $this->gridUsesSoftDeletes()) {
+            $this->add(new BatchRestore());
         }
 
         $this->addActionScripts();

@@ -87,4 +87,9 @@ return [
     'current_page'          => 'Página actual',
     'selected_rows'         => 'Filas seleccionadas',
     'menu_titles'           => [],
+    'restore'               => 'Restaurar',
+    'restore_confirm'       => '¿Está seguro de restaurar este registro?',
+    'restore_succeeded'     => 'Restaurado con éxito !',
+    'restore_failed'        => 'Error al restaurar !',
+    'batch_restore'         => 'Restaurar por lotes',
 ];

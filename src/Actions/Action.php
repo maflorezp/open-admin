@@ -93,6 +93,14 @@ abstract class Action implements Renderable
     public $name;
 
     /**
+     * Fuerza el tipo de respuesta: 'swal' o 'toastr'. Con false (por defecto)
+     * se elige según si la acción tiene dialog().
+     *
+     * @var string|false
+     */
+    public $force_response = false;
+
+    /**
      * @var string
      */
     public $preScriptStr = false;
@@ -247,7 +255,10 @@ abstract class Action implements Renderable
             $this->response = new Response();
         }
 
-        if (method_exists($this, 'dialog')) {
+        // Solo se aceptan los dos tipos conocidos para no invocar métodos arbitrarios de Response
+        if (in_array($this->force_response, ['swal', 'toastr'], true)) {
+            $this->response->{$this->force_response}();
+        } elseif (method_exists($this, 'dialog')) {
             $this->response->swal();
         } else {
             $this->response->toastr();
