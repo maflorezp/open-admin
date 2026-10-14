@@ -311,6 +311,44 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Diseño de la página de login
+    |--------------------------------------------------------------------------
+    |
+    | "default": el formulario de siempre (no cambia nada).
+    | "center-box": logo, subtítulo, formulario en tarjeta y copyright, centrados.
+    | "split-screen": imagen (login_background_image) y cita a la izquierda,
+    | formulario a la derecha; en móvil solo se ve el formulario.
+    |
+    | Los textos opcionales de abajo solo se usan en "center-box" y
+    | "split-screen"; vacíos, no se muestran.
+    |
+    */
+    'login_layout' => 'default',
+
+    // Línea bajo el logo
+    'login_subtitle' => '',
+
+    // Cita sobre la imagen de "split-screen" y su autor
+    'login_quote'        => '',
+    'login_quote_author' => '',
+
+    // Texto al pie del formulario, por ejemplo "© 2026 Mi empresa"
+    'login_copyright' => '',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hojas de estilo extra para el login
+    |--------------------------------------------------------------------------
+    |
+    | Rutas o URLs de CSS que se cargan solo en la página de login, en
+    | cualquier diseño. También se pueden agregar desde código con
+    | Admin::cssForLogin('css/login.css').
+    |
+    */
+    'login_css' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | Show version at footer
     |--------------------------------------------------------------------------
     |

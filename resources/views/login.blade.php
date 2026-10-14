@@ -11,9 +11,16 @@
 		@endif
 
 		<link rel="stylesheet" href="{{ Admin::asset("open-admin/css/styles.css")}}">
+		@foreach(Admin::cssForLogin() as $loginCss)
+		<link rel="stylesheet" href="{{ admin_asset($loginCss) }}">
+		@endforeach
 		<script src="{{ Admin::asset("bootstrap5/bootstrap.bundle.min.js")}}"></script>
 
 	</head>
+	@php($loginLayout = str_replace('login-', '', (string) config('admin.login_layout', 'default')))
+	@if(in_array($loginLayout, ['center-box', 'split-screen'], true))
+	@include('admin::login.'.$loginLayout)
+	@else
 	<body class="bg-light" @if(config('admin.login_background_image'))style="background: url({{config('admin.login_background_image')}}) no-repeat;background-size: cover;"@endif>
 		<div class="d-flex justify-content-center align-items-center h-100">
 			<div class="container m-4" style="max-width:400px;">
@@ -69,4 +76,5 @@
 			</div>
 		</div>
 	</body>
+	@endif
 </html>
