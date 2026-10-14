@@ -399,6 +399,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Opciones por defecto de los toastr
+    |--------------------------------------------------------------------------
+    |
+    | Se mezclan con las opciones de cada admin_toastr() (las de la llamada
+    | ganan). Ver https://github.com/apvarun/toastify-js para las opciones.
+    | Ejemplo: ['position' => 'center', 'duration' => 6000]
+    |
+    */
+    'toastr_config' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | The global Grid action display class. (Actions::class, DropdownActions:class or ContextMenuActions::class)
     |--------------------------------------------------------------------------
     */
