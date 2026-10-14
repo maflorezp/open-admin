@@ -238,7 +238,7 @@ abstract class RowAction extends GridAction
 
         $title = $this->title === true ? $this->name() : $this->title;
 
-        return " title='".e(strip_tags((string) $title))."'";
+        return " title='".e(trim(strip_tags((string) $title)))."'";
     }
 
     /**

@@ -102,7 +102,8 @@ class BatchActions extends AbstractTool
      */
     protected function gridUsesSoftDeletes()
     {
-        $model = $this->grid->model()->eloquent();
+        // eloquent() ya devuelve el paginador cuando la grilla se está dibujando: se usa el modelo original
+        $model = $this->grid->model()->getOriginalModel();
 
         return $model && in_array(SoftDeletes::class, class_uses_deep($model));
     }
