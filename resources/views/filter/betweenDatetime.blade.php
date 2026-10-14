@@ -2,13 +2,15 @@
     <label class="col-sm-{{ $cols_label }} control-label">{{$label}}</label>
     <div class="col-sm-{{ $cols_field }}" style="width: 390px">
         <div class="input-group">
+            @if($icon)
             <div class="input-group-text">
-                <i class="icon-calendar"></i>
+                <i class="{{ $icon }}"></i>
             </div>
+            @endif
             <input type="text"
                    class="form-control"
                    id="{{$id['start']}}"
-                   placeholder="{{$label}}"
+                   placeholder="{{$placeholder['start']}}"
                    name="{{$name['start']}}"
                    value="{{ request()->input("{$column}.start", \Illuminate\Support\Arr::get($value, 'start')) }}"
                    autocomplete="off"
@@ -19,7 +21,7 @@
             <input type="text"
                    class="form-control"
                    id="{{$id['end']}}"
-                   placeholder="{{$label}}"
+                   placeholder="{{$placeholder['end']}}"
                    name="{{$name['end']}}"
                    value="{{ request()->input("{$column}.end", \Illuminate\Support\Arr::get($value, 'end')) }}"
                    autocomplete="off"
