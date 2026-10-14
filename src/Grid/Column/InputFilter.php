@@ -32,7 +32,8 @@ class InputFilter extends Filter
      */
     public function addBinding($value, Model $model)
     {
-        if (empty($value)) {
+        // Un arreglo en la URL (?columna[]=x) no es un valor de este filtro: se ignora en vez de tronar
+        if (empty($value) || !is_scalar($value)) {
             return;
         }
 
@@ -109,7 +110,10 @@ SCRIPT;
         }
 
         $value = $this->getFilterValue();
+        $value = is_scalar($value) ? $value : '';
         $active = empty($value) ? '' : 'text-yellow';
+        // Lo que llega en la URL se pinta dentro de value="": sin escapar era un XSS reflejado
+        $value = e($value);
 
         return <<<EOT
 <span class="dropdown">
@@ -120,7 +124,7 @@ SCRIPT;
     </a>
     <ul class="dropdown-menu" role="menu" style="padding: 10px;box-shadow: 0 2px 3px 0 rgba(0,0,0,.2);left: -70px;">
         <li>
-            <input type="text" name="{$this->getColumnName()}" value="{$this->getFilterValue()}" class="form-control input-sm {$this->class} {$this->addition_classes}" autocomplete="off"/>
+            <input type="text" name="{$this->getColumnName()}" value="{$value}" class="form-control input-sm {$this->class} {$this->addition_classes}" autocomplete="off"/>
         </li>
         <li class="divider"><hr class="dropdown-divider"></li>
         <li class="text-right">

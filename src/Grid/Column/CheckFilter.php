@@ -39,7 +39,8 @@ class CheckFilter extends Filter
             return;
         }
 
-        $model->whereIn($this->getColumnName(), $value);
+        // Un valor suelto en la URL (?columna=x) llega como string y whereIn() necesita un arreglo
+        $model->whereIn($this->getColumnName(), (array) $value);
     }
 
     /**
@@ -72,7 +73,7 @@ SCRIPT;
      */
     public function render()
     {
-        $value = $this->getFilterValue([]);
+        $value = (array) $this->getFilterValue([]);
 
         $lists = collect($this->options)->map(function ($label, $key) use ($value) {
             $checked = in_array($key, $value) ? 'checked' : '';

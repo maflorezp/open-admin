@@ -34,7 +34,9 @@ class RangeFilter extends Filter
      */
     public function addBinding($value, Model $model)
     {
-        $value = array_filter((array) $value);
+        $value = array_filter($this->normalizeValue($value), function ($val) {
+            return $val !== '';
+        });
 
         if (empty($value)) {
             return;
@@ -45,8 +47,28 @@ class RangeFilter extends Filter
         } elseif (!isset($value['end'])) {
             return $model->where($this->getColumnName(), '>', $value['start']);
         } else {
-            return $model->whereBetween($this->getColumnName(), array_values($value));
+            return $model->whereBetween($this->getColumnName(), [$value['start'], $value['end']]);
         }
+    }
+
+    /**
+     * Deja el valor del filtro siempre como ['start' => ..., 'end' => ...].
+     *
+     * Un valor suelto en la URL (?columna=5) llegaba como string y rompía con «Undefined array key»;
+     * array_filter() sin callback además descartaba un límite en 0.
+     *
+     * @param mixed $value
+     *
+     * @return array
+     */
+    protected function normalizeValue($value)
+    {
+        $value = is_array($value) ? $value : [];
+
+        return [
+            'start' => is_scalar($value['start'] ?? null) ? (string) $value['start'] : '',
+            'end'   => is_scalar($value['end'] ?? null) ? (string) $value['end'] : '',
+        ];
     }
 
     protected function addScript()
@@ -95,8 +117,10 @@ SCRIPT;
 
         $this->addScript();
 
-        $value = array_merge(['start' => '', 'end' => ''], $this->getFilterValue([]));
-        $active = empty(array_filter($value)) ? '' : 'text-yellow';
+        $value = $this->normalizeValue($this->getFilterValue([]));
+        $active = $value['start'] === '' && $value['end'] === '' ? '' : 'text-yellow';
+        // Lo que llega en la URL se pinta dentro de value="": sin escapar era un XSS reflejado
+        $value = array_map('e', $value);
 
         return <<<EOT
 <span class="dropdown">
@@ -111,7 +135,7 @@ SCRIPT;
         </li>
         <li style="margin: 5px;"></li>
         <li>
-            <input type="text" class="form-control input {$this->class['start']}" name="{$this->getColumnName()}[end]"  value="{$value['end']}" autocomplete="off"/>
+            <input type="text" class="form-control input {$this->class['end']}" name="{$this->getColumnName()}[end]"  value="{$value['end']}" autocomplete="off"/>
         </li>
         <li><hr class="dropdown-divider" /></li>
         <li class="text-right">
