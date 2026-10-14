@@ -94,6 +94,20 @@ abstract class AbstractFilter
     protected $ignore = false;
 
     /**
+     * Ancho de la etiqueta de este filtro; null = el del panel (o 2).
+     *
+     * @var int|null
+     */
+    protected $colsLabel;
+
+    /**
+     * Ancho del campo de este filtro; null = el del panel (o 8).
+     *
+     * @var int|null
+     */
+    protected $colsField;
+
+    /**
      * AbstractFilter constructor.
      *
      * @param $column
@@ -503,13 +517,56 @@ abstract class AbstractFilter
     protected function variables()
     {
         return array_merge([
-            'id'        => $this->id,
-            'column'    => $this->column,
-            'name'      => $this->formatName($this->column),
-            'label'     => $this->label,
-            'value'     => $this->value ?: $this->defaultValue,
-            'presenter' => $this->presenter(),
+            'id'         => $this->id,
+            'column'     => $this->column,
+            'name'       => $this->formatName($this->column),
+            'label'      => $this->label,
+            'value'      => $this->value ?: $this->defaultValue,
+            'presenter'  => $this->presenter(),
+            'cols_label' => $this->resolveCols('label', 2),
+            'cols_field' => $this->resolveCols('field', 8),
         ], $this->presenter()->variables());
+    }
+
+    /**
+     * Fija el ancho (en columnas de Bootstrap) de la etiqueta y del campo de este filtro.
+     *
+     * @param int $label
+     * @param int $field
+     *
+     * @return $this
+     */
+    public function setCols($label = 2, $field = 8)
+    {
+        $this->colsLabel = $label;
+        $this->colsField = $field;
+
+        return $this;
+    }
+
+    /**
+     * Ancho efectivo: el del filtro, si no el del panel, si no el de siempre.
+     *
+     * @param string $key     label|field
+     * @param int    $default
+     *
+     * @return int
+     */
+    protected function resolveCols($key, $default)
+    {
+        $own = $key === 'label' ? $this->colsLabel : $this->colsField;
+        if (isset($own)) {
+            return $own;
+        }
+
+        if ($this->parent instanceof Filter) {
+            $cols = $this->parent->getCols();
+            if (isset($cols[$key])) {
+                return $cols[$key];
+            }
+        }
+
+        return $default;
     }
 
     /**

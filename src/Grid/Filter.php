@@ -73,6 +73,20 @@ class Filter implements Renderable
     ];
 
     /**
+     * Ancho (en columnas de Bootstrap) de la etiqueta de cada filtro; null = 2.
+     *
+     * @var int|null
+     */
+    protected $colsLabel;
+
+    /**
+     * Ancho (en columnas de Bootstrap) del campo de cada filtro; null = 8.
+     *
+     * @var int|null
+     */
+    protected $colsField;
+
+    /**
      * If use id filter.
      *
      * @var bool
@@ -210,6 +224,34 @@ class Filter implements Renderable
         $this->filterID = $filterID;
 
         return $this;
+    }
+
+    /**
+     * Fija el ancho de etiqueta y campo para todos los filtros del panel.
+     *
+     * Cada filtro puede sobrescribirlo con su propio setCols().
+     *
+     * @param int $label
+     * @param int $field
+     *
+     * @return $this
+     */
+    public function setCols($label = 2, $field = 8)
+    {
+        $this->colsLabel = $label;
+        $this->colsField = $field;
+
+        return $this;
+    }
+
+    /**
+     * Ancho de etiqueta y campo fijados con setCols(), o null en cada uno si no se fijaron.
+     *
+     * @return array
+     */
+    public function getCols()
+    {
+        return ['label' => $this->colsLabel, 'field' => $this->colsField];
     }
 
     /**
@@ -554,7 +596,9 @@ class Filter implements Renderable
             'action'   => $this->action ?: $this->urlWithoutFilters(),
             'layout'   => $this->layout,
             'filterID' => $this->filterID,
-            'expand'   => $this->expand,
+            'expand'     => $this->expand,
+            'cols_label' => isset($this->colsLabel) ? $this->colsLabel : 2,
+            'cols_field' => isset($this->colsField) ? $this->colsField : 8,
         ])->render();
     }
 

@@ -13,6 +13,20 @@ class Between extends AbstractFilter
     protected $view = 'admin::filter.between';
 
     /**
+     * Placeholders de «desde» y «hasta»; null = la etiqueta del filtro.
+     *
+     * @var array
+     */
+    protected $placeholder = ['start' => null, 'end' => null];
+
+    /**
+     * Ícono antes de los campos de fecha; '' o false lo quita.
+     *
+     * @var string
+     */
+    protected $icon = 'icon-calendar';
+
+    /**
      * Format id.
      *
      * @param string $column
@@ -24,6 +38,21 @@ class Between extends AbstractFilter
         $id = str_replace('.', '_', $column);
 
         return ['start' => "{$id}_start", 'end' => "{$id}_end"];
+    }
+
+    /**
+     * Fija los placeholders de los campos «desde» y «hasta».
+     *
+     * @param string $start
+     * @param string $end
+     *
+     * @return $this
+     */
+    public function setPlaceholders($start, $end)
+    {
+        $this->placeholder = ['start' => $start, 'end' => $end];
+
+        return $this;
     }
 
     /**
@@ -103,6 +132,12 @@ class Between extends AbstractFilter
     {
         $this->view = 'admin::filter.betweenDatetime';
 
+        // 'icon' es de la vista, no de flatpickr: se saca de las opciones
+        if (array_key_exists('icon', $options)) {
+            $this->icon = $options['icon'];
+            unset($options['icon']);
+        }
+
         $this->setupDatetime($options);
 
         return $this;
@@ -135,5 +170,21 @@ class Between extends AbstractFilter
 SCRIPT;
 
         Admin::script($script);
+    }
+
+    /**
+     * Variables for filter view.
+     *
+     * @return array
+     */
+    protected function variables()
+    {
+        return array_merge(parent::variables(), [
+            'placeholder' => [
+                'start' => isset($this->placeholder['start']) ? $this->placeholder['start'] : $this->label,
+                'end'   => isset($this->placeholder['end']) ? $this->placeholder['end'] : $this->label,
+            ],
+            'icon' => $this->icon,
+        ]);
     }
 }
