@@ -6,6 +6,7 @@ use OpenAdmin\Admin\Actions\RowAction;
 use OpenAdmin\Admin\Admin;
 use OpenAdmin\Admin\Grid\Actions\Delete;
 use OpenAdmin\Admin\Grid\Actions\Edit;
+use OpenAdmin\Admin\Grid\Actions\Restore;
 use OpenAdmin\Admin\Grid\Actions\Show;
 use OpenAdmin\Admin\Grid\Displayers\AbstractDisplayer;
 
@@ -161,6 +162,11 @@ class Actions extends AbstractDisplayer
     protected function prependDefaultActions()
     {
         foreach ($this->defaultClass as $class) {
+            // Restaurar solo tiene sentido en filas que están en la papelera (SoftDeletes)
+            if ($class === Restore::class && !$this->rowIsTrashed()) {
+                continue;
+            }
+
             array_push($this->default, $this->getDefaultInstance($class));
         }
     }
@@ -269,6 +275,35 @@ class Actions extends AbstractDisplayer
             array_delete($this->defaultClass, Delete::class);
         } elseif (!in_array(Delete::class, $this->defaultClass)) {
             array_push($this->defaultClass, Delete::class);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Indica si la fila actual es un registro borrado con SoftDeletes.
+     *
+     * @return bool
+     */
+    protected function rowIsTrashed()
+    {
+        return is_object($this->row) && method_exists($this->row, 'trashed') && $this->row->trashed();
+    }
+
+    /**
+     * Muestra la acción Restaurar en las filas que están en la papelera (SoftDeletes).
+     * Es opt-in: por defecto no aparece.
+     *
+     * @param bool $enable
+     *
+     * @return $this
+     */
+    public function enableRestore(bool $enable = true)
+    {
+        if (!$enable) {
+            array_delete($this->defaultClass, Restore::class);
+        } elseif (!in_array(Restore::class, $this->defaultClass)) {
+            array_push($this->defaultClass, Restore::class);
         }
 
         return $this;
