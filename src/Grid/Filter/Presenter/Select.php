@@ -32,6 +32,20 @@ class Select extends Presenter
     protected $additional_script = '';
 
     /**
+     * Usar el select nativo del navegador en vez de Choices.js.
+     *
+     * @var bool
+     */
+    protected $native = false;
+
+    /**
+     * Pintar la opción vacía al inicio de la lista.
+     *
+     * @var bool
+     */
+    protected $emptyOption = true;
+
+    /**
      * Select constructor.
      *
      * @param mixed $options
@@ -99,8 +113,11 @@ class Select extends Presenter
         ], $this->config);
         $configs = json_encode($configs);
 
-        $script = 'var '.$this->choicesObjName()." = new Choices('.{$this->getElementClass()}',{$configs});";
-        Admin::script($script.$this->additional_script);
+        // Con useNative() no se monta Choices.js (ni los scripts que dependen de él)
+        if (!$this->native) {
+            $script = 'var '.$this->choicesObjName()." = new Choices('.{$this->getElementClass()}',{$configs});";
+            Admin::script($script.$this->additional_script);
+        }
 
         return is_array($this->options) ? $this->options : [];
     }
@@ -141,6 +158,46 @@ class Select extends Presenter
 
             return $model::find($resources)->pluck($textField, $idField)->toArray();
         };
+
+        return $this;
+    }
+
+    /**
+     * Usa el select nativo del navegador en vez de Choices.js.
+     *
+     * No sirve con opciones remotas ni ajax(): esas se cargan a través de Choices.js.
+     *
+     * @return $this
+     */
+    public function useNative()
+    {
+        $this->native = true;
+
+        return $this;
+    }
+
+    /**
+     * Vuelve a usar Choices.js (el comportamiento por defecto).
+     *
+     * @return $this
+     */
+    public function useChoicesjs()
+    {
+        $this->native = false;
+
+        return $this;
+    }
+
+    /**
+     * Quita la opción vacía del inicio de la lista.
+     *
+     * Sin ella, el filtro siempre envía una opción (la primera si no se elige otra).
+     *
+     * @return $this
+     */
+    public function hideEmpty()
+    {
+        $this->emptyOption = false;
 
         return $this;
     }
@@ -214,8 +271,9 @@ JS;
     public function variables(): array
     {
         return [
-            'options' => $this->buildOptions(),
-            'class'   => $this->getElementClass(),
+            'options'     => $this->buildOptions(),
+            'class'       => $this->getElementClass(),
+            'emptyOption' => $this->emptyOption,
         ];
     }
 
