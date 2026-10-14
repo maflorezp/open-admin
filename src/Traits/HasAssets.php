@@ -108,6 +108,32 @@ trait HasAssets
     public static $minifyIgnoresJs = [];
 
     /**
+     * Hojas de estilo que se cargan solo en la página de login.
+     *
+     * @var array
+     */
+    public static $loginCss = [];
+
+    /**
+     * Agrega hojas de estilo a la página de login o devuelve todas
+     * (las de config('admin.login_css') primero y luego las agregadas por código).
+     *
+     * @param string|array|null $css
+     *
+     * @return array
+     */
+    public static function cssForLogin($css = null)
+    {
+        if (!is_null($css)) {
+            static::$loginCss = array_merge(static::$loginCss, (array) $css);
+        }
+
+        $files = array_merge((array) config('admin.login_css', []), static::$loginCss);
+
+        return array_values(array_filter(array_unique($files)));
+    }
+
+    /**
      * Add css or get all css.
      *
      * @param null $css

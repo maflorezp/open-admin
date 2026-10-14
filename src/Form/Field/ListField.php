@@ -77,17 +77,137 @@ class ListField extends Field
     {
         $this->script = <<<JS
 
-        document.querySelector('.{$this->column}-add').addEventListener('click', function () {
-            var tpl = document.querySelector('template.{$this->column}-tpl').innerHTML;
-            var clone = htmlToElement(tpl);
-            document.querySelector('tbody.list-{$this->column}-table').appendChild(clone);
-        });
+        (function () {
+            var tbody = document.querySelector('tbody.list-{$this->column}-table');
+            var tplElement = document.querySelector('template.{$this->column}-tpl');
 
-        document.querySelector('tbody.list-{$this->column}-table').addEventListener('click', function (event) {
-            if (event.target.classList.contains('{$this->column}-remove')){
-                event.target.closest('tr').remove();
+            // Agrega una fila nueva desde la plantilla, después de afterRow o al final, y devuelve su input
+            function addRow(afterRow) {
+                var clone = htmlToElement(tplElement.innerHTML);
+                if (afterRow && afterRow.parentNode === tbody) {
+                    tbody.insertBefore(clone, afterRow.nextElementSibling);
+                } else {
+                    tbody.appendChild(clone);
+                }
+
+                return clone.querySelector('input');
             }
-        });
+
+            // Lleva el foco a un input y deja el cursor al final del texto
+            function focusAtEnd(input) {
+                if (!input) {
+                    return;
+                }
+                input.focus();
+                var length = input.value.length;
+                try {
+                    input.setSelectionRange(length, length);
+                } catch (e) {
+                    // algunos tipos de input no admiten selección; basta con el foco
+                }
+            }
+
+            // Devuelve el input de la fila si el evento viene de un input de esta lista
+            function rowInput(event) {
+                var target = event.target;
+                if (!target || target.tagName !== 'INPUT') {
+                    return null;
+                }
+                var row = target.closest('tr');
+                if (!row || row.parentNode !== tbody) {
+                    return null;
+                }
+
+                return target;
+            }
+
+            document.querySelector('.{$this->column}-add').addEventListener('click', function () {
+                focusAtEnd(addRow());
+            });
+
+            tbody.addEventListener('click', function (event) {
+                var remove = event.target.closest('.{$this->column}-remove');
+                if (remove && tbody.contains(remove)) {
+                    remove.closest('tr').remove();
+                }
+            });
+
+            // Teclado: Enter pasa a la fila siguiente o la crea; Supr/Retroceso en una fila vacía la elimina
+            tbody.addEventListener('keydown', function (event) {
+                var input = rowInput(event);
+                if (!input || event.isComposing) {
+                    return;
+                }
+                var row = input.closest('tr');
+
+                if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
+                    // evita que Enter envíe el formulario
+                    event.preventDefault();
+                    var next = row.nextElementSibling;
+                    if (next && next.querySelector('input')) {
+                        focusAtEnd(next.querySelector('input'));
+                    } else {
+                        focusAtEnd(addRow(row));
+                    }
+
+                    return;
+                }
+
+                if ((event.key === 'Delete' || event.key === 'Backspace') && input.value === '') {
+                    var prev = row.previousElementSibling;
+                    var after = row.nextElementSibling;
+                    // se conserva siempre al menos una fila para poder seguir escribiendo
+                    if (!prev && !after) {
+                        return;
+                    }
+                    event.preventDefault();
+                    row.remove();
+                    var target = (event.key === 'Backspace' ? (prev || after) : (after || prev));
+                    focusAtEnd(target ? target.querySelector('input') : null);
+                }
+            });
+
+            // Pegar texto de varias líneas crea una fila por línea
+            tbody.addEventListener('paste', function (event) {
+                var input = rowInput(event);
+                if (!input) {
+                    return;
+                }
+                var clipboard = event.clipboardData || window.clipboardData;
+                if (!clipboard) {
+                    return;
+                }
+                var text = clipboard.getData('text') || '';
+                var lines = text.split(/\\r\\n|\\r|\\n/);
+                // el salto de línea final (típico al copiar de una hoja de cálculo) no crea fila vacía
+                if (lines.length > 1 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+                if (lines.length < 2) {
+                    // una sola línea: se deja el pegado normal del navegador
+                    return;
+                }
+                event.preventDefault();
+
+                // la primera línea reemplaza la selección actual del input, como un pegado normal
+                var value = input.value;
+                var start = input.selectionStart;
+                var end = input.selectionEnd;
+                if (start === null || end === null) {
+                    start = end = value.length;
+                }
+                input.value = value.slice(0, start) + lines[0] + value.slice(end);
+
+                var row = input.closest('tr');
+                var last = input;
+                for (var i = 1; i < lines.length; i++) {
+                    last = addRow(row);
+                    last.value = lines[i];
+                    row = last.closest('tr');
+                }
+                focusAtEnd(last);
+            });
+        })();
 JS;
     }
 
