@@ -43,6 +43,20 @@ abstract class RowAction extends GridAction
     public $target = null;
 
     /**
+     * Callback que decide, fila por fila, si la acción se dibuja.
+     *
+     * @var \Closure|null
+     */
+    protected $beforeRenderCallback;
+
+    /**
+     * Clases CSS extra para el enlace de la acción.
+     *
+     * @var string
+     */
+    protected $cssClass = '';
+
+    /**
      * Get primary key value of current row.
      *
      * @return mixed
@@ -168,6 +182,50 @@ abstract class RowAction extends GridAction
     }
 
     /**
+     * Registra un callback que se evalúa antes de dibujar la acción. Se ejecuta con
+     * $this ligado a la acción (tiene $this->row) y recibe la acción como argumento;
+     * si devuelve false la acción no se dibuja en esa fila.
+     *
+     * @param \Closure $callback
+     *
+     * @return $this
+     */
+    public function beforeRender(\Closure $callback)
+    {
+        $this->beforeRenderCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Indica si la acción debe dibujarse en la fila actual.
+     *
+     * @return bool
+     */
+    public function shouldRender()
+    {
+        if ($this->beforeRenderCallback instanceof \Closure) {
+            return (bool) $this->beforeRenderCallback->call($this, $this);
+        }
+
+        return true;
+    }
+
+    /**
+     * Agrega clases CSS al enlace de la acción.
+     *
+     * @param string $class
+     *
+     * @return $this
+     */
+    public function cssClass($class)
+    {
+        $this->cssClass = trim($this->cssClass.' '.$class);
+
+        return $this;
+    }
+
+    /**
      * Atributo title ya escapado, o cadena vacía si no hay tooltip.
      *
      * @return string
@@ -211,7 +269,14 @@ abstract class RowAction extends GridAction
      */
     public function render()
     {
+        if (!$this->shouldRender()) {
+            return '';
+        }
+
         $linkClass = ($this->parent->getActionClass() != "OpenAdmin\Admin\Grid\Displayers\Actions\Actions") ? 'dropdown-item' : '';
+        if ($this->cssClass !== '') {
+            $linkClass = trim($linkClass.' '.e($this->cssClass));
+        }
         $icon = $this->getIcon();
 
         $title = $this->formatTitle();

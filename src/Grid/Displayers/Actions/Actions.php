@@ -24,6 +24,14 @@ class Actions extends AbstractDisplayer
     protected $default = [];
 
     /**
+     * Instancias de las acciones por defecto, por clase. Se crean antes del callback
+     * de actions() para que getAction() pueda configurarlas (p. ej. beforeRender()).
+     *
+     * @var RowAction[]
+     */
+    protected $defaultInstances = [];
+
+    /**
      * @var array
      */
     protected $defaultClass = [Edit::class, Show::class, Delete::class];
@@ -153,13 +161,66 @@ class Actions extends AbstractDisplayer
     protected function prependDefaultActions()
     {
         foreach ($this->defaultClass as $class) {
+            array_push($this->default, $this->getDefaultInstance($class));
+        }
+    }
+
+    /**
+     * Instancia (creada una sola vez) de una acción por defecto.
+     *
+     * @param string $class
+     *
+     * @return RowAction
+     */
+    protected function getDefaultInstance($class)
+    {
+        if (!isset($this->defaultInstances[$class])) {
             /** @var RowAction $action */
             $action = new $class();
 
             $this->prepareAction($action);
 
-            array_push($this->default, $action);
+            $this->defaultInstances[$class] = $action;
         }
+
+        return $this->defaultInstances[$class];
+    }
+
+    /**
+     * Devuelve la acción de la fila con esa clase (por defecto o agregada), o false.
+     * Sirve para configurarla dentro del callback de actions(), p. ej.
+     * $actions->getAction(Delete::class)->beforeRender(...).
+     *
+     * @param string $className
+     *
+     * @return RowAction|false
+     */
+    public function getAction($className)
+    {
+        if (in_array($className, $this->defaultClass, true)) {
+            return $this->getDefaultInstance($className);
+        }
+
+        foreach (array_merge($this->default, $this->custom) as $action) {
+            if (get_class($action) === $className) {
+                return $action;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Quita las acciones cuyo beforeRender() diga que no se dibujan en esta fila.
+     */
+    protected function filterActions()
+    {
+        $shouldRender = function (RowAction $action) {
+            return $action->shouldRender();
+        };
+
+        $this->default = array_values(array_filter($this->default, $shouldRender));
+        $this->custom = array_values(array_filter($this->custom, $shouldRender));
     }
 
     /**
@@ -247,6 +308,8 @@ class Actions extends AbstractDisplayer
         }
 
         $this->prependDefaultActions();
+
+        $this->filterActions();
 
         $variables = [
             'default'           => $this->default,
