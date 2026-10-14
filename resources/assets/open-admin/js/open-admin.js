@@ -256,6 +256,13 @@ admin.ajax = {
     },
 
     init: function () {
+        NProgress.configure({ parent: '#main' });
+
+        // Admin::disablePjax() en el servidor: la página navega sin PJAX, sin interceptar enlaces ni el historial
+        if (window.disablePjax) {
+            return;
+        }
+
         // history back
         window.onpopstate = function (event) {
             preventPopState = true;
@@ -283,13 +290,16 @@ admin.ajax = {
         // forms that should be submitted with ajax
         // now handled by admin.form.initAjax()
         // also needs to work for widgets
-
-        NProgress.configure({ parent: '#main' });
     },
 
     // use navigate when you want history working
     // and the url to be changed
     navigate: function (url, preventPopState) {
+        if (window.disablePjax) {
+            window.location.href = url;
+            return;
+        }
+
         admin.collectGarbage();
         if (window.innerWidth < 540) {
             document.body.classList.remove('side-menu-closed');
@@ -313,6 +323,11 @@ admin.ajax = {
     },
 
     reload: function () {
+        if (window.disablePjax) {
+            window.location.reload();
+            return;
+        }
+
         preventPopState = true;
         this.navigate(document.location.href);
     },
@@ -396,6 +411,12 @@ admin.ajax = {
     },
 
     done: function (response) {
+        // El servidor pidió recarga completa (Admin::disablePjax()): se navega a la URL final sin pintar nada
+        if (!admin.ajax.currenTarget && response.headers && response.headers['x-pjax-reload']) {
+            window.location.href = response.request.responseURL;
+            return;
+        }
+
         if (window.location !== response.request.responseURL) {
             this.setUrl(response.request.responseURL);
         }

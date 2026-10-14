@@ -4,6 +4,7 @@ namespace OpenAdmin\Admin;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use InvalidArgumentException;
@@ -26,6 +27,13 @@ class Admin
      * @var string
      */
     public const VERSION = '1.0.28';
+
+    /**
+     * Cabecera con la que una respuesta a una petición PJAX le pide al navegador una recarga completa.
+     *
+     * @var string
+     */
+    public const PJAX_RELOAD_HEADER = 'X-PJAX-RELOAD';
 
     /**
      * @var Navbar
@@ -440,5 +448,37 @@ class Admin
         $lang_array = json_encode(__('admin'));
 
         return '<script>var admin_lang_arr = '.$lang_array.'</script>';
+    }
+
+    /**
+     * Apaga la navegación PJAX en la página de esta petición: los enlaces, los formularios y las
+     * recargas pasan a ser navegaciones completas del navegador.
+     *
+     * Sirve para páginas que necesitan cargar su propio <head> (assets, estilos) y que PJAX no
+     * recargaría. Se llama desde el controlador antes de devolver el contenido.
+     *
+     * @throws HttpResponseException si la página se pidió por PJAX: corta la petición con una
+     *                               respuesta vacía que ordena al navegador recargarla completa.
+     *
+     * @return void
+     */
+    public function disablePjax()
+    {
+        $request = request();
+
+        // Llegó por PJAX (un clic desde otra página): en vez de pintarla dentro del #main, se le pide
+        // al navegador que la cargue completa. Solo en lecturas: en un POST/PUT cortar aquí se saltaría
+        // el guardado, y su redirección vuelve a pasar por aquí como GET.
+        if ($request->pjax() && $request->isMethod('GET')) {
+            // La recarga es una petición más: se conservan los flash (errores, old input, toastr)
+            // que esta petición iba a consumir, para que los pinte la página completa.
+            if ($request->hasSession()) {
+                $request->session()->reflash();
+            }
+
+            throw new HttpResponseException(response('', 200, [self::PJAX_RELOAD_HEADER => '1']));
+        }
+
+        static::script('window.disablePjax = true;');
     }
 }
