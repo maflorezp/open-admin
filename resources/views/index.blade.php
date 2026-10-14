@@ -16,6 +16,10 @@
         function LA() {}
         LA.token = "{{ csrf_token() }}";
         LA.user = @json($_user_);
+        @if(($csrfRefresh = (int) config('admin.csrf_refresh', 0)) > 0)
+        LA.csrf_refresh_url = "{{ route('admin.refresh-csrf') }}";
+        LA.csrf_refresh_interval = {{ max(1, $csrfRefresh) }};
+        @endif
     </script>
 
     {!! Admin::css() !!}

@@ -26,6 +26,11 @@ admin.form = {
     },
 
     addAjaxSubmit: function () {
+        // Con PJAX apagado (Admin::disablePjax()) los formularios se envían de forma nativa
+        if (window.disablePjax) {
+            return;
+        }
+
         // forms that should be submitted with ajax
         Array.from(document.getElementsByTagName('form')).forEach((form) => {
             if (form.getAttribute('pjax-container') != null && !form.classList.contains('has-ajax-handler')) {

@@ -18,6 +18,59 @@ admin.init = function () {
     admin.menu.init();
     admin.ajax.init();
     admin.pages.init();
+    admin.csrf.init();
+};
+
+/*-------------------------------------------------*/
+/* refresco del token csrf */
+/*-------------------------------------------------*/
+
+admin.csrf = {
+    timer: false,
+
+    // Solo arranca si el layout publicó la ruta y el intervalo (config admin.csrf_refresh > 0)
+    init: function () {
+        if (this.timer || typeof LA.csrf_refresh_url === 'undefined' || !LA.csrf_refresh_interval) {
+            return;
+        }
+        this.timer = setInterval(admin.csrf.refresh, LA.csrf_refresh_interval * 60 * 1000);
+    },
+
+    refresh: function () {
+        fetch(LA.csrf_refresh_url, {
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+        })
+            .then(function (response) {
+                // Con la sesión vencida la respuesta es la redirección al login: no hay token que tomar
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data || !data.token) {
+                    return;
+                }
+                admin.csrf.apply(data.token);
+            })
+            .catch(function (error) {
+                console.warn('No se pudo refrescar el token CSRF:', error);
+            });
+    },
+
+    apply: function (token) {
+        LA.token = token;
+
+        document.querySelectorAll("input[name='_token']").forEach(function (input) {
+            input.value = token;
+        });
+
+        let metaTag = document.querySelector("meta[name='csrf-token']");
+        if (metaTag) {
+            metaTag.setAttribute('content', token);
+        }
+    },
 };
 
 /*-------------------------------------------------*/
@@ -203,6 +256,13 @@ admin.ajax = {
     },
 
     init: function () {
+        NProgress.configure({ parent: '#main' });
+
+        // Admin::disablePjax() en el servidor: la página navega sin PJAX, sin interceptar enlaces ni el historial
+        if (window.disablePjax) {
+            return;
+        }
+
         // history back
         window.onpopstate = function (event) {
             preventPopState = true;
@@ -230,13 +290,16 @@ admin.ajax = {
         // forms that should be submitted with ajax
         // now handled by admin.form.initAjax()
         // also needs to work for widgets
-
-        NProgress.configure({ parent: '#main' });
     },
 
     // use navigate when you want history working
     // and the url to be changed
     navigate: function (url, preventPopState) {
+        if (window.disablePjax) {
+            window.location.href = url;
+            return;
+        }
+
         admin.collectGarbage();
         if (window.innerWidth < 540) {
             document.body.classList.remove('side-menu-closed');
@@ -260,6 +323,11 @@ admin.ajax = {
     },
 
     reload: function () {
+        if (window.disablePjax) {
+            window.location.reload();
+            return;
+        }
+
         preventPopState = true;
         this.navigate(document.location.href);
     },
@@ -343,6 +411,12 @@ admin.ajax = {
     },
 
     done: function (response) {
+        // El servidor pidió recarga completa (Admin::disablePjax()): se navega a la URL final sin pintar nada
+        if (!admin.ajax.currenTarget && response.headers && response.headers['x-pjax-reload']) {
+            window.location.href = response.request.responseURL;
+            return;
+        }
+
         if (window.location !== response.request.responseURL) {
             this.setUrl(response.request.responseURL);
         }

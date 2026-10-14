@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Str;
+use OpenAdmin\Admin\Admin as AdminApp;
 use OpenAdmin\Admin\Facades\Admin;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,6 +26,11 @@ class Pjax
         $response = $next($request);
 
         if (!$request->pjax() || $response->isRedirection() || Admin::guard()->guest()) {
+            return $response;
+        }
+
+        // Admin::disablePjax() pidió recarga completa: la respuesta va vacía y no hay contenido que filtrar
+        if ($response->headers->has(AdminApp::PJAX_RELOAD_HEADER)) {
             return $response;
         }
 

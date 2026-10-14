@@ -385,6 +385,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Refresco automático del token CSRF
+    |--------------------------------------------------------------------------
+    |
+    | Cada cuántos minutos pide el panel un token CSRF fresco y lo reparte en
+    | LA.token, la meta csrf-token y todos los inputs _token de la página, para
+    | no recibir un 419 al guardar tras una sesión larga. Cada petición mantiene
+    | viva la sesión mientras la pestaña siga abierta, así que el cierre de
+    | sesión por inactividad deja de ocurrir. 0 lo desactiva (por defecto).
+    |
+    */
+    'csrf_refresh' => env('ADMIN_CSRF_REFRESH', 0),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Opciones por defecto de los toastr
+    |--------------------------------------------------------------------------
+    |
+    | Se mezclan con las opciones de cada admin_toastr() (las de la llamada
+    | ganan). Ver https://github.com/apvarun/toastify-js para las opciones.
+    | Ejemplo: ['position' => 'center', 'duration' => 6000]
+    |
+    */
+    'toastr_config' => [],
+
+    /*
+    |--------------------------------------------------------------------------
     | The global Grid action display class. (Actions::class, DropdownActions:class or ContextMenuActions::class)
     |--------------------------------------------------------------------------
     */

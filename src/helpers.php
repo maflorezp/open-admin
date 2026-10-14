@@ -72,9 +72,124 @@ if (!function_exists('admin_toastr')) {
      */
     function admin_toastr($message = '', $type = 'success', $options = [])
     {
-        $toastr = new MessageBag(get_defined_vars());
+        $bag = new MessageBag(get_defined_vars());
+
+        // Se acumula: varios admin_toastr() antes de la redirección se muestran todos
+        $toastr = admin_toastr_bags(session()->pull('toastr'));
+        $toastr[] = $bag;
 
         session()->flash('toastr', $toastr);
+    }
+}
+
+if (!function_exists('admin_toastr_bags')) {
+    /**
+     * Normaliza lo guardado en la sesión bajo 'toastr' a una lista de MessageBag.
+     *
+     * Antes se guardaba un solo MessageBag; se sigue aceptando por si otro código lo flashea así.
+     *
+     * @param mixed $toastr
+     *
+     * @return MessageBag[]
+     */
+    function admin_toastr_bags($toastr)
+    {
+        if (empty($toastr)) {
+            return [];
+        }
+
+        if ($toastr instanceof MessageBag) {
+            return [$toastr];
+        }
+
+        return array_values(array_filter((array) $toastr, function ($bag) {
+            return $bag instanceof MessageBag;
+        }));
+    }
+}
+
+if (!function_exists('admin_toast_from_bag')) {
+    /**
+     * Arma la llamada JS de un toastr a partir de su MessageBag.
+     *
+     * @param MessageBag $bag
+     *
+     * @return string
+     */
+    function admin_toast_from_bag($bag)
+    {
+        $type = \Illuminate\Support\Arr::get($bag->get('type'), 0, 'success');
+        $message = \Illuminate\Support\Arr::get($bag->get('message'), 0, '');
+        // getMessages() y no get(): get() pasa cada opción por el formato del MessageBag y la vuelve texto
+        $options = \Illuminate\Support\Arr::get($bag->getMessages(), 'options', []);
+        $options = array_merge((array) config('admin.toastr_config', []), (array) $options);
+
+        // El tipo es el nombre de un método de admin.toastr: solo letras, para no inyectar JS
+        $type = preg_replace('/[^A-Za-z_]/', '', $type) ?: 'success';
+
+        // json_encode deja el mensaje como literal JS válido aunque traiga comillas o </script>
+        $message = json_encode((string) $message, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
+
+        return 'admin.toastr.'.$type.'('.$message.', '.json_encode($options, JSON_HEX_TAG).');';
+    }
+}
+
+if (!function_exists('admin_toastr_script')) {
+    /**
+     * Saca de la sesión los toastr pendientes y devuelve el JS que los muestra.
+     *
+     * Los retira al pintarlos para que no se repitan en la petición siguiente.
+     *
+     * @return string
+     */
+    function admin_toastr_script()
+    {
+        $toasts = array_map('admin_toast_from_bag', admin_toastr_bags(session()->pull('toastr')));
+
+        return implode("\n", $toasts);
+    }
+}
+
+if (!function_exists('admin_flashjs')) {
+    /**
+     * Guarda un JS para ejecutarlo en la página siguiente (por ejemplo, la que sigue a un guardado).
+     *
+     * Se acumula: varias llamadas antes de la redirección se ejecutan todas, en orden.
+     *
+     * @param string $script
+     */
+    function admin_flashjs($script = '')
+    {
+        if (trim((string) $script) === '') {
+            return;
+        }
+
+        $flashjs = session()->pull('flashjs', []);
+        $flashjs = is_array($flashjs) ? $flashjs : [(string) $flashjs];
+        $flashjs[] = (string) $script;
+
+        session()->flash('flashjs', $flashjs);
+    }
+}
+
+if (!function_exists('admin_flashjs_script')) {
+    /**
+     * Saca de la sesión los JS pendientes de admin_flashjs() y devuelve el código que los ejecuta.
+     *
+     * Cada uno va aislado en su función con try/catch: si uno falla, los demás se ejecutan igual.
+     *
+     * @return string
+     */
+    function admin_flashjs_script()
+    {
+        $flashjs = session()->pull('flashjs', []);
+        $flashjs = is_array($flashjs) ? $flashjs : [(string) $flashjs];
+
+        $scripts = array_map(function ($script) {
+            return '(function () { try { '.$script."\n; } catch (e) { console.error(e); } }());";
+        }, $flashjs);
+
+        return implode("\n", $scripts);
     }
 }
 
