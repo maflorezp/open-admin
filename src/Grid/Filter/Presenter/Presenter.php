@@ -22,6 +22,22 @@ abstract class Presenter
     }
 
     /**
+     * Atajo para fijar el ancho de etiqueta y campo desde el presentador
+     * (p. ej. ->select([...])->setCols(3, 6)); lo guarda el filtro.
+     *
+     * @param int $label
+     * @param int $field
+     *
+     * @return $this
+     */
+    public function setCols($label = 2, $field = 8)
+    {
+        $this->filter->setCols($label, $field);
+
+        return $this;
+    }
+
+    /**
      * @see https://stackoverflow.com/questions/19901850/how-do-i-get-an-objects-unqualified-short-class-name
      *
      * @return string

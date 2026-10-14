@@ -1,6 +1,6 @@
 <div class="form-group row">
-    <label class="col-sm-2 control-label">{{$label}}</label>
-    <div class="col-sm-8" style="width: 390px">
+    <label class="col-sm-{{ $cols_label }} control-label">{{$label}}</label>
+    <div class="col-sm-{{ $cols_field }}" style="width: 390px">
         <div class="input-group">
             <div class="input-group-text">
                 <i class="icon-calendar"></i>

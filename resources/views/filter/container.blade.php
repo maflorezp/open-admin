@@ -20,8 +20,8 @@
             <div class="row">
                 <div class="col-md-{{ $layout->columns()->first()->width() }}">
                     <div class="row">
-                        <div class="col-md-2"></div>
-                        <div class="col-md-8">
+                        <div class="col-md-{{ $cols_label }}"></div>
+                        <div class="col-md-{{ $cols_field }}">
                             <div class="btn-group pull-left">
                                 <button class="btn btn-primary submit btn-sm"><i
                                             class="icon-search"></i>&nbsp;&nbsp;{{ trans('admin.search') }}</button>
