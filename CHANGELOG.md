@@ -4,6 +4,13 @@ See https://open-admin.org/docs/
 Este fork (maflorezp/open-admin) parte de la v1.0.27 de open-admin-org. Cada cambio cita en su
 commit el repositorio y el commit de origen.
 
+## v1.0.30
+
+### Correcciones
+- Campo de archivo/imagen: si el valor ya es una URL absoluta (p. ej. el avatar por defecto que
+  devuelve `Administrator::getAvatarAttribute`), la vista previa la usa tal cual en vez de
+  anteponerle `storageUrl` (daba `/uploads/https://...` y un 404 en Perfil y en Usuarios).
+
 ## v1.0.29
 
 ### Correcciones

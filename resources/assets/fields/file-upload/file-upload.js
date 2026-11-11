@@ -327,7 +327,10 @@ class FileUpload {
             let files = (new String(ref.input.dataset.files)).split(',');
             files.forEach(file =>{
                 let fileInfo = this.getFileInfoFromName(file);
-                ref.createCard(fileInfo, this.options.storageUrl+file);
+                // Una URL absoluta (p. ej. el avatar por defecto que devuelve el modelo) ya es la
+                // dirección del archivo: anteponerle storageUrl daba ".../uploads/https://...".
+                let url = /^(https?:)?\/\//i.test(file) ? file : this.options.storageUrl+file;
+                ref.createCard(fileInfo, url);
             })
         }
     }
