@@ -4,6 +4,13 @@ See https://open-admin.org/docs/
 Este fork (maflorezp/open-admin) parte de la v1.0.27 de open-admin-org. Cada cambio cita en su
 commit el repositorio y el commit de origen.
 
+## v1.0.31
+
+### Correcciones
+- Menú lateral: con tres niveles (sección › subsección › opción) solo la opción activa queda resaltada.
+  La regla `li > ul > li.active a` pintaba de azul todos los enlaces bajo la subsección activa; ahora
+  es `li > ul > li.active > a`.
+
 ## v1.0.30
 
 ### Correcciones
